@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bot Dashboard</title>
+<style>
+  :root {
+    --bg: #14151a;
+    --panel: #1c1e26;
+    --panel-2: #23252f;
+    --border: #303240;
+    --text: #e6e6ea;
+    --muted: #8a8d9a;
+    --accent: #5865f2;
+    --accent-hover: #4752c4;
+    --ok: #3ba55d;
+    --danger: #ed4245;
+    --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+  header {
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: 0.2px;
+  }
+  header .subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 2px;
+  }
+  main {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 20px 80px;
+  }
+  .add-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .add-btn:hover { background: var(--accent-hover); }
+
+  .empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 60px 20px;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    margin-top: 20px;
+  }
+
+  .bot-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+  }
+  .bot-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .bot-name {
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+    background: var(--muted);
+  }
+  .status-dot.on { background: var(--ok); box-shadow: 0 0 6px var(--ok); }
+
+  .bot-meta {
+    color: var(--muted);
+    font-size: 12.5px;
+    margin-top: 6px;
+    font-family: var(--mono);
+    word-break: break-all;
+  }
+  .btn-row { display: flex; gap: 8px; flex-shrink: 0; }
+  .btn {
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    color: var(--text);
+    padding: 7px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn.start { color: var(--ok); }
+  .btn.stop { color: #f0a544; }
+  .btn.danger { color: var(--danger); }
+
+  .logs {
+    margin-top: 12px;
+    background: #0f1015;
+    border-radius: 6px;
+    padding: 10px 12px;
+    max-height: 130px;
+    overflow-y: auto;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: #9aa0ac;
+    display: none;
+  }
+  .logs.show { display: block; }
+  .logs div { padding: 1px 0; }
+
+  /* Modal */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+  }
+  .overlay.show { display: flex; }
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    width: 460px;
+    max-width: 92vw;
+  }
+  .modal h2 { margin: 0 0 16px; font-size: 16px; }
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .field input, .field textarea {
+    width: 100%;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 9px 10px;
+    color: var(--text);
+    font-size: 13.5px;
+    font-family: inherit;
+    resize: vertical;
+  }
+  .field small { color: var(--muted); font-size: 11px; }
+  .field-row { display: flex; gap: 10px; }
+  .field-row .field { flex: 1; }
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .toast {
+    position: fixed;
+    bottom: 20px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    display: none;
+    z-index: 100;
+  }
+  .toast.show { display: block; }
+  .toast.error { border-color: var(--danger); color: #ff9a9c; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Bot Dashboard</h1>
+    <div class="subtitle">Kelola pesan terjadwal untuk beberapa Discord Bot</div>
+  </div>
+  <button class="add-btn" onclick="openModal()">+ Tambah Bot</button>
+</header>
+
+<main>
+  <div id="list"></div>
+  <div id="emptyState" class="empty" style="display:none">
+    Belum ada bot. Klik "Tambah Bot" untuk memulai.
+  </div>
+</main>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2 id="modalTitle">Tambah Bot</h2>
+    <input type="hidden" id="editId" />
+    <div class="field">
+      <label>Nama Bot (label bebas)</label>
+      <input id="fName" placeholder="Contoh: Bot Promo Server A" />
+    </div>
+    <div class="field">
+      <label>Bot Token</label>
+      <input id="fToken" placeholder="Token dari Discord Developer Portal" />
+      <small>Token bot resmi, didapat dari discord.com/developers/applications</small>
+    </div>
+    <div class="field">
+      <label>Channel ID tujuan (pisahkan dengan koma)</label>
+      <input id="fChannels" placeholder="1421116213760626749, 987654321..." />
+    </div>
+    <div class="field">
+      <label>Pesan</label>
+      <textarea id="fMessage" rows="3" placeholder="Isi pesan yang dikirim"></textarea>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Interval (detik)</label>
+        <input id="fInterval" type="number" min="1" value="5" />
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Batal</button>
+      <button class="btn start" onclick="saveBot()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let bots = [];
+let logTimers = {};
+
+async function fetchBots() {
+  const res = await fetch('/api/bots');
+  bots = await res.json();
+  render();
+}
+
+function render() {
+  const list = document.getElementById('list');
+  const empty = document.getElementById('emptyState');
+  if (bots.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = bots.map(b => `
+    <div class="bot-card">
+      <div class="bot-card-head">
+        <div>
+          <span class="status-dot ${b.running ? 'on' : ''}"></span>
+          <span class="bot-name">${escapeHtml(b.name)}</span>
+        </div>
+        <div class="btn-row">
+          ${b.running
+            ? `<button class="btn stop" onclick="stopBot('${b.id}')">Stop</button>`
+            : `<button class="btn start" onclick="startBot('${b.id}')">Start</button>`
+          }
+          <button class="btn" onclick="editBot('${b.id}')">Edit</button>
+          <button class="btn" onclick="toggleLogs('${b.id}')">Log</button>
+          <button class="btn danger" onclick="deleteBot('${b.id}')">Hapus</button>
+        </div>
+      </div>
+      <div class="bot-meta">
+        Token: ${b.tokenMasked} · Interval: ${b.intervalSeconds}s<br/>
+        Channel: ${b.channelIds.join(', ')}<br/>
+        Pesan: "${escapeHtml(b.message)}"
+      </div>
+      <div class="logs" id="logs-${b.id}"></div>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(s) {
+  return (s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function openModal() {
+  document.getElementById('modalTitle').textContent = 'Tambah Bot';
+  document.getElementById('editId').value = '';
+  document.getElementById('fName').value = '';
+  document.getElementById('fToken').value = '';
+  document.getElementById('fChannels').value = '';
+  document.getElementById('fMessage').value = '';
+  document.getElementById('fInterval').value = 5;
+  document.getElementById('overlay').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('overlay').classList.remove('show');
+}
+
+function editBot(id) {
+  const b = bots.find(x => x.id === id);
+  if (!b) return;
+  document.getElementById('modalTitle').textContent = 'Edit Bot';
+  document.getElementById('editId').value = id;
+  document.getElementById('fName').value = b.name;
+  document.getElementById('fToken').value = ''; // kosongkan, isi hanya jika ingin ganti
+  document.getElementById('fChannels').value = b.channelIds.join(', ');
+  document.getElementById('fMessage').value = b.message;
+  document.getElementById('fInterval').value = b.intervalSeconds;
+  document.getElementById('overlay').classList.add('show');
+}
+
+async function saveBot() {
+  const id = document.getElementById('editId').value;
+  const payload = {
+    name: document.getElementById('fName').value.trim(),
+    token: document.getElementById('fToken').value.trim(),
+    channelIds: document.getElementById('fChannels').value,
+    message: document.getElementById('fMessage').value,
+    intervalSeconds: document.getElementById('fInterval').value,
+  };
+
+  if (!id && !payload.token) {
+    showToast('Token wajib diisi', true);
+    return;
+  }
+  if (!payload.channelIds || !payload.message) {
+    showToast('Channel ID dan pesan wajib diisi', true);
+    return;
+  }
+
+  const url = id ? `/api/bots/${id}` : '/api/bots';
+  const method = id ? 'PUT' : 'POST';
+  const res = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    showToast(data.error || 'Gagal menyimpan', true);
+    return;
+  }
+  closeModal();
+  showToast('Tersimpan');
+  fetchBots();
+}
+
+async function startBot(id) {
+  const res = await fetch(`/api/bots/${id}/start`, { method: 'POST' });
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error || 'Gagal start', true); return; }
+  showToast('Bot dijalankan');
+  setTimeout(fetchBots, 800);
+}
+
+async function stopBot(id) {
+  await fetch(`/api/bots/${id}/stop`, { method: 'POST' });
+  showToast('Bot dihentikan');
+  fetchBots();
+}
+
+async function deleteBot(id) {
+  if (!confirm('Hapus bot ini?')) return;
+  await fetch(`/api/bots/${id}`, { method: 'DELETE' });
+  showToast('Bot dihapus');
+  fetchBots();
+}
+
+function toggleLogs(id) {
+  const el = document.getElementById(`logs-${id}`);
+  const showing = el.classList.contains('show');
+  document.querySelectorAll('.logs.show').forEach(e => e.classList.remove('show'));
+  Object.values(logTimers).forEach(t => clearInterval(t));
+  logTimers = {};
+  if (!showing) {
+    el.classList.add('show');
+    loadLogs(id);
+    logTimers[id] = setInterval(() => loadLogs(id), 3000);
+  }
+}
+
+async function loadLogs(id) {
+  const res = await fetch(`/api/bots/${id}/logs`);
+  const data = await res.json();
+  const el = document.getElementById(`logs-${id}`);
+  if (!el) return;
+  el.innerHTML = data.logs.map(l => `<div>${escapeHtml(l)}</div>`).join('') || '<div>Belum ada aktivitas</div>';
+}
+
+function showToast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => { t.className = 'toast'; }, 2500);
+}
+
+fetchBots();
+setInterval(fetchBots, 5000);
+</script>
+
+</body>
+</html>

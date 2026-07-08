@@ -1,0 +1,14 @@
+{
+  "name": "discord-bot-dashboard",
+  "version": "1.0.0",
+  "description": "Dashboard web untuk mengelola beberapa Discord Bot resmi (pesan terjadwal ke banyak channel)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "discord.js-selfbot-v13": "^3.7.1",
+    "express": "^4.19.2"
+  }
+}
