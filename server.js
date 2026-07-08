@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
-const { Client } = require('discord.js-selfbot-v13');
+const { Client, MessageEmbed } = require('discord.js-selfbot-v13');
 
 const app = express();
 app.use(express.json());
@@ -80,8 +80,17 @@ async function sendToAllChannels(id, client, bot) {
   for (const channelId of bot.channelIds) {
     try {
       const channel = await client.channels.fetch(channelId);
-      await channel.send(bot.message);
-      addLog(id, `Pesan terkirim ke channel ${channelId}`);
+
+      // Buat embed
+      const embed = new MessageEmbed()
+        .setTitle('📢 Giveweay Robux')
+        .setDescription(bot.message) // isi pesan dari config
+        .setColor('#00FFFF') // warna teal
+        .setFooter({ text: `${bot.name}` })
+        .setTimestamp();
+
+      await channel.send({ embeds: [embed] });
+      addLog(id, `Embed terkirim ke channel ${channelId}`);
     } catch (err) {
       addLog(id, `Gagal kirim ke ${channelId}: ${err.message}`);
     }
@@ -199,7 +208,7 @@ app.get('/api/bots/:id/logs', (req, res) => {
   res.json({ logs: rt ? rt.logs : [] });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10364;
 app.listen(PORT, () => {
   console.log(`Dashboard jalan di http://localhost:${PORT}`);
 });
