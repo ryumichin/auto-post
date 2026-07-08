@@ -1,4 +1,4 @@
-# Discord Bot Dashboard
+# discord.js-selfbot-v13
 
 Dashboard web untuk mengelola beberapa **Discord Bot resmi** (multi-bot) yang mengirim pesan otomatis
 ke satu atau lebih channel dengan interval tertentu.
